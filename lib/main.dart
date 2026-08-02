@@ -29,7 +29,7 @@ class _QualityAppState extends State<QualityApp> {
           onNavigationRequest: (NavigationRequest request) async {
             final String url = request.url;
 
-            // WhatsApp, Phone, Mail ya External Links ko bahar WhatsApp App me kholo
+            // WhatsApp, Calls, Mails aur UPI Links ko external apps me launch karo
             if (url.startsWith('whatsapp://') ||
                 url.startsWith('intent://') ||
                 url.startsWith('https://wa.me/') ||
@@ -37,13 +37,20 @@ class _QualityAppState extends State<QualityApp> {
                 url.startsWith('mailto:')) {
               
               final Uri uri = Uri.parse(url);
-              if (await canLaunchUrl(uri)) {
-                await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+              try {
+                await launchUrl(
+                  uri,
+                  mode: LaunchMode.externalApplication,
+                );
+              } catch (e) {
+                debugPrint('Could not launch $url: $e');
               }
-              return NavigationDecision.prevent; // WebView me Error mat aane do
+
+              return NavigationDecision.prevent; // WebView me blank error mat hone do
             }
 
-            return NavigationDecision.navigate; // Baaki normal pages WebView me dikhao
+            return NavigationDecision.navigate;
           },
         ),
       )
