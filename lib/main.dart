@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_flutter_android/webview_flutter_android.dart'; // Add this if needed
 import 'package:url_launcher/url_launcher.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
@@ -29,7 +28,7 @@ class _QualityAppState extends State<QualityApp> {
   void initState() {
     super.initState();
 
-    // 1. Controller Creation
+    // Controller setup with webview_flutter
     controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
@@ -77,25 +76,10 @@ class _QualityAppState extends State<QualityApp> {
             return NavigationDecision.navigate;
           },
         ),
-      );
+      )
+      ..loadRequest(Uri.parse('https://qualitysweet.vercel.app/'));
 
-    // 2. Grant Geolocation Permission automatically for WebView
-    if (controller.platform is AndroidWebViewController) {
-      (controller.platform as AndroidWebViewController)
-          .setGeolocationPermissionsPromptCallbacks(
-        onShowPrompt: (request) async {
-          return GeolocationPermissionsResponse(
-            allow: true,
-            retain: true,
-          );
-        },
-      );
-    }
-
-    // 3. Load Website Request
-    controller.loadRequest(Uri.parse('https://qualitysweet.vercel.app/'));
-
-    // 4. Network Listener
+    // Network Status Listener
     _connectivitySubscription = Connectivity()
         .onConnectivityChanged
         .listen((List<ConnectivityResult> results) {
