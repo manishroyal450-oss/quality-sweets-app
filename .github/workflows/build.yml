@@ -23,19 +23,25 @@ jobs:
           channel: 'stable'
 
       - name: Re-create Android Project Files
-        run: flutter create . --platforms=android --org=com.qualitysweets.app
+        run: flutter create . --platforms=android
 
-      - name: Add Internet Permission
+      - name: Add Internet & Location Permissions
         run: |
-          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.INTERNET"/>' android/app/src/main/AndroidManifest.xml
+          sed -i '/<manifest/a \  <uses-permission android:name="android.permission.INTERNET"\/>' android/app/src/main/AndroidManifest.xml
+          sed -i '/<manifest/a \  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"\/>' android/app/src/main/AndroidManifest.xml
+          sed -i '/<manifest/a \  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"\/>' android/app/src/main/AndroidManifest.xml
+
+      - name: Fix minSdkVersion for connectivity_plus
+        run: |
+          sed -i 's/minSdkVersion.*/minSdkVersion 21/' android/app/build.gradle
 
       - name: Get Dependencies
         run: flutter pub get
 
       - name: Build APK & AAB
         run: |
-          flutter build apk --release --no-tree-shake-icons
-          flutter build appbundle --release --no-tree-shake-icons
+          flutter build apk --release
+          flutter build appbundle --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
