@@ -25,11 +25,12 @@ jobs:
       - name: Re-create Android Project Files
         run: flutter create . --platforms=android
 
-      - name: Add Internet & Location Permissions
+      - name: Inject Android Manifest Permissions
         run: |
           sed -i '/<manifest/a \  <uses-permission android:name="android.permission.INTERNET"\/>' android/app/src/main/AndroidManifest.xml
           sed -i '/<manifest/a \  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"\/>' android/app/src/main/AndroidManifest.xml
           sed -i '/<manifest/a \  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"\/>' android/app/src/main/AndroidManifest.xml
+          sed -i '/<manifest/a \  <uses-feature android:name="android.hardware.location.gps" android:required="false"\/>' android/app/src/main/AndroidManifest.xml
 
       - name: Fix minSdkVersion for connectivity_plus
         run: |
