@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() {
   runApp(const MaterialApp(
@@ -23,12 +24,16 @@ class _QualityAppState extends State<QualityApp> {
   late final WebViewController controller;
   bool isOffline = false;
   late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
+  final String targetUrl = 'https://qualitysweet.vercel.app/';
 
   @override
   void initState() {
     super.initState();
 
-    // Controller setup with webview_flutter
+    // 1. Request GPS Permission on launch
+    _requestLocationPermission();
+
+    // 2. Controller Setup
     controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
@@ -38,12 +43,17 @@ class _QualityAppState extends State<QualityApp> {
               setState(() {
                 isOffline = true;
               });
+              controller.loadHtmlString(
+                '<html><body style="background-color: #ffffff;"></body></html>',
+              );
             }
           },
           onPageFinished: (String url) {
-            setState(() {
-              isOffline = false;
-            });
+            if (url.startsWith('http')) {
+              setState(() {
+                isOffline = false;
+              });
+            }
           },
           onNavigationRequest: (NavigationRequest request) async {
             final String url = request.url;
@@ -76,10 +86,10 @@ class _QualityAppState extends State<QualityApp> {
             return NavigationDecision.navigate;
           },
         ),
-      )
-      ..loadRequest(Uri.parse('https://qualitysweet.vercel.app/'));
+      );
 
-    // Network Status Listener
+    _checkInitialConnectivity();
+
     _connectivitySubscription = Connectivity()
         .onConnectivityChanged
         .listen((List<ConnectivityResult> results) {
@@ -94,10 +104,28 @@ class _QualityAppState extends State<QualityApp> {
           setState(() {
             isOffline = false;
           });
-          controller.reload();
+          controller.loadRequest(Uri.parse(targetUrl));
         }
       }
     });
+  }
+
+  Future<void> _requestLocationPermission() async {
+    var status = await Permission.location.status;
+    if (!status.isGranted) {
+      await Permission.location.request();
+    }
+  }
+
+  Future<void> _checkInitialConnectivity() async {
+    final results = await Connectivity().checkConnectivity();
+    if (results.contains(ConnectivityResult.none)) {
+      setState(() {
+        isOffline = true;
+      });
+    } else {
+      controller.loadRequest(Uri.parse(targetUrl));
+    }
   }
 
   @override
@@ -117,9 +145,9 @@ class _QualityAppState extends State<QualityApp> {
             if (isOffline)
               Positioned.fill(
                 child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 4.0, sigmaY: 4.0),
+                  filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
                   child: Container(
-                    color: Colors.black.withOpacity(0.35),
+                    color: Colors.black.withOpacity(0.40),
                     child: Center(
                       child: Container(
                         margin: const EdgeInsets.symmetric(horizontal: 28.0),
@@ -152,16 +180,16 @@ class _QualityAppState extends State<QualityApp> {
                             ),
                             const SizedBox(height: 16),
                             const Text(
-                              'Currently Offline',
+                              'No Internet Connection',
                               style: TextStyle(
-                                fontSize: 20,
+                                fontSize: 19,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black87,
                               ),
                             ),
                             const SizedBox(height: 8),
                             const Text(
-                              'Please check your internet connection',
+                              'Please check your network settings',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 13,
@@ -189,7 +217,7 @@ class _QualityAppState extends State<QualityApp> {
                                   ),
                                   SizedBox(width: 10),
                                   Text(
-                                    'Waiting for connection...',
+                                    'Reconnecting...',
                                     style: TextStyle(
                                       color: Colors.black54,
                                       fontSize: 13,
