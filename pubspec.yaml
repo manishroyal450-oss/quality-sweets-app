@@ -13,6 +13,8 @@ dependencies:
   url_launcher: ^6.3.0
   connectivity_plus: ^6.1.0
   permission_handler: ^11.3.1
+  image_picker: ^1.0.7
+  share_plus: ^9.0.0
 
 flutter:
   uses-material-design: true
