@@ -5,6 +5,8 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:share_plus/share_plus.dart';
 
 void main() {
   runApp(const MaterialApp(
@@ -25,6 +27,7 @@ class _QualityAppState extends State<QualityApp> {
   bool isOffline = false;
   late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
   final String targetUrl = 'https://qualitysweet.vercel.app/';
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -58,9 +61,37 @@ class _QualityAppState extends State<QualityApp> {
           onNavigationRequest: (NavigationRequest request) async {
             final String url = request.url;
 
-            if (url.startsWith('whatsapp://') ||
-                url.startsWith('intent://') ||
-                url.startsWith('https://wa.me/') ||
+            // WhatsApp link handle karein: Details read karein + Gallery kholein
+            if (url.startsWith('whatsapp://') || url.startsWith('https://wa.me/')) {
+              final Uri uri = Uri.parse(url);
+              
+              // Website se aaya hua order details text nikalein
+              String messageText = uri.queryParameters['text'] ?? "New Order Details & Payment Proof";
+
+              // Gallery kholein aur Screenshot pick karwayein
+              final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+
+              if (image != null) {
+                // Image + Order Details dono ek sath WhatsApp par share karein
+                await Share.shareXFiles(
+                  [XFile(image.path)],
+                  text: messageText,
+                );
+              } else {
+                // Agar user screenshot select na kare to direct WhatsApp link open kar dein
+                try {
+                  await launchUrl(
+                    uri,
+                    mode: LaunchMode.externalNonBrowserApplication,
+                  );
+                } catch (_) {}
+              }
+
+              return NavigationDecision.prevent;
+            }
+
+            // Tel, Mailto aur baki Intent Handlers
+            if (url.startsWith('intent://') ||
                 url.startsWith('tel:') ||
                 url.startsWith('mailto:')) {
               
