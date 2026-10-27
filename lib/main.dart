@@ -26,7 +26,7 @@ class _QualityAppState extends State<QualityApp> {
   late final WebViewController controller;
   bool isOffline = false;
   late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
-  final String targetUrl = 'https://qualitysweet.vercel.app/';
+  final String targetUrl = 'https://localmart-grocery.vercel.app/';
   final ImagePicker _picker = ImagePicker();
 
   @override
